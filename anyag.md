@@ -477,6 +477,140 @@ Ez a típus a korábban létrehozott `ty_vacc_type` objektumtípus elemeiből á
 A két típus együtt használható például a `BULK COLLECT` utasítással történő adatlekérésnél.
 
 ---
+### Konstruktorok (CONSTRUCTOR)
+
+Az Oracle objektumtípusokhoz automatikusan létrejön egy alapértelmezett konstruktor, amelynek neve megegyezik az objektumtípus nevével. A konstruktor az objektum attribútumainak értékeit paraméterként kapja meg, a deklarációban meghatározott sorrendben.
+
+#### 1. Alapértelmezett konstruktor
+
+Szintaxis:
+
+```
+tipusnev(ertek1, ertek2, ertek3)
+```
+
+Példa – objektumtípus létrehozása:
+
+```
+CREATE OR REPLACE TYPE ty_employee AS OBJECT (
+    employee_id NUMBER,
+    employee_name VARCHAR2(100),
+    salary NUMBER
+);
+/
+```
+
+Objektum létrehozása konstruktorral:
+
+```
+DECLARE
+    v_employee ty_employee;
+BEGIN
+    v_employee := ty_employee(
+        1,
+        'Anna',
+        500000
+    );
+END;
+/
+```
+
+A `ty_employee(1, 'Anna', 500000)` konstruktor létrehozza az objektumpéldányt, és hozzárendeli az értékeket az attribútumokhoz.
+
+#### 2. Saját konstruktor (CONSTRUCTOR FUNCTION)
+
+Az Oracle-ben saját konstruktor is definiálható a `CONSTRUCTOR FUNCTION` segítségével. Ezzel egyedi inicializálási logika valósítható meg az objektum létrehozásakor.
+
+Szintaxis – konstruktor deklarálása:
+
+```
+CREATE OR REPLACE TYPE tipusnev AS OBJECT (
+    attribútum1 adattipus,
+    attribútum2 adattipus,
+
+    CONSTRUCTOR FUNCTION tipusnev (
+        parameter1 adattipus,
+        parameter2 adattipus
+    ) RETURN SELF AS RESULT
+);
+/
+```
+
+Konstruktor megvalósítása:
+
+```
+CREATE OR REPLACE TYPE BODY tipusnev AS
+
+    CONSTRUCTOR FUNCTION tipusnev (
+        parameter1 adattipus,
+        parameter2 adattipus
+    ) RETURN SELF AS RESULT IS
+    BEGIN
+        SELF.attribútum1 := parameter1;
+        SELF.attribútum2 := parameter2;
+
+        RETURN;
+    END;
+
+END;
+/
+```
+
+- `CONSTRUCTOR FUNCTION`: saját konstruktor deklarálása.
+- `RETURN SELF AS RESULT`: a konstruktor az aktuális objektumpéldányt adja vissza.
+- `SELF`: az aktuális objektumpéldányra hivatkozik.
+- `SELF.attribútum`: az objektum adott attribútumának elérésére szolgál.
+- `RETURN`: visszaadja az inicializált objektumot.
+
+Konkrét példa:
+
+```
+CREATE OR REPLACE TYPE ty_person AS OBJECT (
+    person_id NUMBER,
+    person_name VARCHAR2(100),
+
+    CONSTRUCTOR FUNCTION ty_person (
+        p_id NUMBER,
+        p_name VARCHAR2
+    ) RETURN SELF AS RESULT
+);
+/
+```
+
+A konstruktor megvalósítása:
+
+```
+CREATE OR REPLACE TYPE BODY ty_person AS
+
+    CONSTRUCTOR FUNCTION ty_person (
+        p_id NUMBER,
+        p_name VARCHAR2
+    ) RETURN SELF AS RESULT IS
+    BEGIN
+        SELF.person_id := p_id;
+        SELF.person_name := UPPER(p_name);
+
+        RETURN;
+    END;
+
+END;
+/
+```
+
+Meghívás:
+
+```
+DECLARE
+    v_person ty_person;
+BEGIN
+    v_person := ty_person(1, 'Anna');
+
+    DBMS_OUTPUT.PUT_LINE(v_person.person_name);
+END;
+/
+```
+
+A példában a konstruktor a név értékét automatikusan nagybetűssé alakítja az objektum létrehozásakor.
 
 ## 4. Package-ek
 
